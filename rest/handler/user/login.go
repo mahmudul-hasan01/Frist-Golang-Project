@@ -1,8 +1,6 @@
 package user
 
 import (
-	"back-end/config"
-	"back-end/database"
 	"back-end/util"
 	"encoding/json"
 	"net/http"
@@ -25,15 +23,18 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	usr := database.FindUserByEmail(loginRequest.Email, loginRequest.Password)
-	if usr == nil {
-		http.Error(w, "Invalid email or password", http.StatusBadRequest)
+	usr, err := h.userRepo.Find(loginRequest.Email, loginRequest.Password)
+	if err != nil {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	cnf := config.GetConfig()
+	if usr == nil {
+		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+		return
+	}
 
-	accessToken, err := util.CreateJwt(cnf.JwtSecretKey, util.Payload{
+	accessToken, err := util.CreateJwt(h.cnf.JwtSecretKey, util.Payload{
 		Sub:         strconv.Itoa(usr.ID),
 		FirstName:   usr.FirstName,
 		LastName:    usr.LastName,
@@ -49,5 +50,5 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	util.SendData(w, map[string]interface{}{
 		"user":        usr,
 		"accessToken": accessToken,
-	}, http.StatusCreated)
+	}, http.StatusOK)
 }

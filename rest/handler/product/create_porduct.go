@@ -1,24 +1,44 @@
 package product
 
 import (
-	"back-end/database"
+	"back-end/repo"
 	"back-end/util"
 	"encoding/json"
 	"net/http"
 )
 
+type ReqCreateProduct struct {
+	ID          int     `json:"id"`
+	Title       string  `json:"title"`
+	Description string  `json:"description"`
+	ImgUrl      string  `json:"imageUrl"`
+	Price       float64 `json:"price"`
+}
+
 func (h *Handler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 
-	var newProduct database.Product
+	var newProduct ReqCreateProduct
 
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&newProduct)
 	if err != nil {
-		http.Error(w, "Bad request", 400)
+		http.Error(w, "Bad request", http.StatusBadRequest)
 		return
 	}
 
-	createdProduct := database.Store(newProduct)
+	// Convert ReqCreateProduct to repo.Product
+	product := repo.Product{
+		Title:       newProduct.Title,
+		Description: newProduct.Description,
+		ImgUrl:      newProduct.ImgUrl,
+		Price:       newProduct.Price,
+	}
 
-	util.SendData(w, createdProduct, 201)
+	createdProduct, err := h.productRepo.Create(product)
+	if err != nil {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	util.SendData(w, createdProduct, http.StatusCreated)
 }

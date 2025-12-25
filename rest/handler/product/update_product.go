@@ -1,7 +1,7 @@
 package product
 
 import (
-	"back-end/database"
+	"back-end/repo"
 	"back-end/util"
 	"encoding/json"
 	"net/http"
@@ -19,19 +19,34 @@ func (h *Handler) UpdateProducts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var newProduct database.Product
-
-	decoder := json.NewDecoder(r.Body)
-	err = decoder.Decode(&newProduct)
+	// Check if product exists
+	existingProduct, err := h.productRepo.Get(id)
 	if err != nil {
-		http.Error(w, "Bad request", 400)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	newProduct.ID = id
+	if existingProduct == nil {
+		util.SendError(w, "Product not found", http.StatusNotFound)
+		return
+	}
 
-	database.Update(newProduct)
+	var updatedProduct repo.Product
 
-	util.SendData(w, "Product updated successfully", 200)
+	decoder := json.NewDecoder(r.Body)
+	err = decoder.Decode(&updatedProduct)
+	if err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
 
+	updatedProduct.ID = id
+
+	result, err := h.productRepo.Update(updatedProduct)
+	if err != nil {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	util.SendData(w, result, http.StatusOK)
 }

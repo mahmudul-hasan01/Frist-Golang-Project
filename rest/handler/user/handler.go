@@ -1,13 +1,21 @@
 package user
 
-import "back-end/rest/middleware"
+import (
+	"back-end/config"
+	"back-end/repo"
+	"back-end/rest/middleware"
+)
 
 type Handler struct {
 	middlewares *middleware.Middlewares
+	userRepo    repo.UserRepo
+	cnf         *config.Config
 }
 
-func NewHandler(middlewares *middleware.Middlewares) *Handler {
+func NewHandler(middlewares *middleware.Middlewares, userRepo repo.UserRepo, cnf *config.Config) *Handler {
 	return &Handler{
 		middlewares: middlewares,
+		userRepo:    userRepo,
+		cnf:         cnf,
 	}
 }

@@ -1,7 +1,6 @@
 package product
 
 import (
-	"back-end/database"
 	"back-end/util"
 	"net/http"
 	"strconv"
@@ -18,8 +17,23 @@ func (h *Handler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	database.Delete(id)
+	// Check if product exists before deleting
+	product, err := h.productRepo.Get(id)
+	if err != nil {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 
-	util.SendData(w, "Product Deleted successfully", 200)
+	if product == nil {
+		util.SendError(w, "Product not found", http.StatusNotFound)
+		return
+	}
 
+	err = h.productRepo.Delete(id)
+	if err != nil {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	util.SendData(w, "Product deleted successfully", http.StatusOK)
 }
