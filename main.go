@@ -2,9 +2,6 @@ package main
 
 import (
 	"back-end/cmd"
-	"back-end/util"
-	"fmt"
-	// "encoding/base64"
 )
 
 func main() {
@@ -28,17 +25,17 @@ func main() {
 	// }
 	// fmt.Println(decStr)
 
-	jwt, err := util.CreateJwt("my-secret", util.Payload{
-		Sub:         "1234567890",
-		FirstName:   "John",
-		LastName:    "Doe",
-		Email:       "john.doe@example.com",
-		IsShopOwner: true,
-		Role:        "admin",
-	})
-	if err != nil {
-		fmt.Println("Error creating JWT:", err)
-		return
-	}
-	fmt.Println(jwt)
+	// jwt, err := util.CreateJwt("my-secret", util.Payload{
+	// 	Sub:         "1234567890",
+	// 	FirstName:   "John",
+	// 	LastName:    "Doe",
+	// 	Email:       "john.doe@example.com",
+	// 	IsShopOwner: true,
+	// 	Role:        "admin",
+	// })
+	// if err != nil {
+	// 	fmt.Println("Error creating JWT:", err)
+	// 	return
+	// }
+	// fmt.Println(jwt)
 }

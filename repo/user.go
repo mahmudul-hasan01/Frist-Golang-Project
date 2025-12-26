@@ -1,5 +1,10 @@
 package repo
 
+import (
+	"database/sql"
+	"github.com/jmoiron/sqlx"
+)
+
 type User struct {
 	ID          int    `json:"id"`
 	FirstName   string `json:"first_name"`
@@ -12,75 +17,95 @@ type User struct {
 
 type UserRepo interface {
 	Create(p User) (*User, error)
-	Get(userId int) (*User, error)
+	// Get(userId int) (*User, error)
 	Find(email, pass string) (*User, error)
-	List() ([]*User, error)
-	Delete(userId int) (*User, error)
-	Update(p User) (*User, error)
+	// List() ([]*User, error)
+	// Delete(userId int) (*User, error)
+	// Update(p User) (*User, error)
 }
 
 type userRepo struct {
-	userList []*User
+	db *sqlx.DB
 }
 
-func NewUserRepo() UserRepo {
-	repo := &userRepo{}
-	generateUser(repo)
-	return repo
+func NewUserRepo(db *sqlx.DB) UserRepo {
+	return &userRepo{
+		db: db,
+	}
 }
 
 func (r *userRepo) Create(p User) (*User, error) {
-	p.ID = len(r.userList) + 1
-	r.userList = append(r.userList, &p)
-	return &p, nil
-}
-func (r *userRepo) Get(userId int) (*User, error) {
-	for _, user := range r.userList {
-		if user.ID == userId {
-			return user, nil
-		}
-	}
-	return nil, nil
-}
-func (r *userRepo) List() ([]*User, error) {
-	return r.userList, nil
-}
-func (r *userRepo) Update(user User) (*User, error) {
-	for i, p := range r.userList {
-		if p.ID == user.ID {
-			r.userList[i] = &user
-		}
-	}
-	return &user, nil
-}
-func (r *userRepo) Delete(userId int) (*User, error) {
-	var tempList []*User
+	query := `
+		INSERT INTO users (first_name, last_name, email, password, is_shop_owner, role)
+		VALUES ($1, $2, $3, $4, $5, $6)
+		RETURNING id
+	`
 
-	for _, p := range r.userList {
-		if p.ID != userId {
-			tempList = append(tempList, p)
-		}
+	err := r.db.QueryRow(
+		query,
+		p.FirstName,
+		p.LastName,
+		p.Email,
+		p.Password,
+		p.IsShopOwner,
+		p.Role,
+	).Scan(&p.ID)
+
+	if err != nil {
+		return nil, err
 	}
-	r.userList = tempList
-	return nil, nil
+
+	return &p, nil
 }
 
 func (r *userRepo) Find(email, pass string) (*User, error) {
-	for _, user := range r.userList {
-		if user.Email == email && user.Password == pass {
-			return user, nil
+	var user User
+	query := `
+		SELECT id, first_name, last_name, email, password, is_shop_owner, role
+		FROM users
+		WHERE email = $1 AND password = $2
+		LIMIT 1
+	`
+
+	err := r.db.Get(&user, query, email, pass)
+	if err != nil {
+		// If no rows found, return nil without error
+		if err == sql.ErrNoRows {
+			return nil, nil
 		}
+		return nil, err
 	}
-	return nil, nil
+
+	return &user, nil
 }
 
-func generateUser(r *userRepo) {
+// func (r *userRepo) Get(userId int) (*User, error) {
+// 	for _, user := range r.userList {
+// 		if user.ID == userId {
+// 			return user, nil
+// 		}
+// 	}
+// 	return nil, nil
+// }
+// func (r *userRepo) List() ([]*User, error) {
+// 	return r.userList, nil
+// }
+// func (r *userRepo) Update(user User) (*User, error) {
+// 	for i, p := range r.userList {
+// 		if p.ID == user.ID {
+// 			r.userList[i] = &user
+// 		}
+// 	}
+// 	return &user, nil
+// }
+// func (r *userRepo) Delete(userId int) (*User, error) {
+// 	var tempList []*User
 
-	prd1 := &User{ID: 1}
-	prd2 := &User{ID: 2}
-	prd3 := &User{ID: 3}
-
-	r.userList = append(r.userList, prd1)
-	r.userList = append(r.userList, prd2)
-	r.userList = append(r.userList, prd3)
-}
+// 	for _, p := range r.userList {
+// 		if p.ID != userId {
+// 			tempList = append(tempList, p)
+// 		}
+// 	}
+// 	r.userList = tempList
+// 	return nil, nil
+// }
