@@ -27,14 +27,14 @@ func (h *Handler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Convert ReqCreateProduct to repo.Product
-	product := repo.Product{
+	product := domain.Product{
 		Title:       newProduct.Title,
 		Description: newProduct.Description,
 		ImgUrl:      newProduct.ImgUrl,
 		Price:       newProduct.Price,
 	}
 
-	createdProduct, err := h.productRepo.Create(product)
+	createdProduct, err := h.svc.Create(product)
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return

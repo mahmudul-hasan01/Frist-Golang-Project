@@ -20,7 +20,7 @@ func (h *Handler) UpdateProducts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if product exists
-	existingProduct, err := h.productRepo.Get(id)
+	existingProduct, err := h.svc.Get(id)
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
@@ -42,7 +42,7 @@ func (h *Handler) UpdateProducts(w http.ResponseWriter, r *http.Request) {
 
 	updatedProduct.ID = id
 
-	result, err := h.productRepo.Update(updatedProduct)
+	result, err := h.svc.Update(updatedProduct)
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return

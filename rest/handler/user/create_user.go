@@ -9,7 +9,7 @@ import (
 
 func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
-	var newUser repo.User
+	var newUser domain.User
 
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&newUser)
@@ -18,7 +18,7 @@ func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	createdUser, err := h.userRepo.Create(newUser)
+	createdUser, err := h.svc.Create(newUser)
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return

@@ -16,12 +16,7 @@ type User struct {
 }
 
 type UserRepo interface {
-	Create(p User) (*User, error)
-	// Get(userId int) (*User, error)
-	Find(email, pass string) (*User, error)
-	// List() ([]*User, error)
-	// Delete(userId int) (*User, error)
-	// Update(p User) (*User, error)
+	user.UserRepo
 }
 
 type userRepo struct {
@@ -34,7 +29,7 @@ func NewUserRepo(db *sqlx.DB) UserRepo {
 	}
 }
 
-func (r *userRepo) Create(p User) (*User, error) {
+func (r *userRepo) Create(p domain.User) (*domain.User, error) {
 	query := `
 		INSERT INTO users (first_name, last_name, email, password, is_shop_owner, role)
 		VALUES ($1, $2, $3, $4, $5, $6)
@@ -58,7 +53,7 @@ func (r *userRepo) Create(p User) (*User, error) {
 	return &p, nil
 }
 
-func (r *userRepo) Find(email, pass string) (*User, error) {
+func (r *userRepo) Find(email, pass string) (*domain.User, error) {
 	var user User
 	query := `
 		SELECT id, first_name, last_name, email, password, is_shop_owner, role

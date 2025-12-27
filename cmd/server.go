@@ -5,8 +5,8 @@ import (
 	"back-end/infra/db"
 	"back-end/repo"
 	"back-end/rest"
-	"back-end/rest/handler/product"
-	"back-end/rest/handler/user"
+	prdHandler "back-end/rest/handler/product"
+	usrHandler "back-end/rest/handler/user"
 	"back-end/rest/middleware"
 	"fmt"
 	"os"
@@ -14,20 +14,29 @@ import (
 
 func Server() {
 	cnf := config.GetConfig()
-	dbcon, err := db.NewConnection()
+	dbcon, err := db.NewConnection(cnf.DB)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	productRepo := repo.NewProductRepo()
+	err := db.MigrateDB(dbcon, "./migrations")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	productRepo := repo.NewProductRepo(dbcon)
 	middlewares := middleware.NewMiddlewares(cnf)
 
-	productHandler := product.NewHandler(middlewares, productRepo)
+usrSvc := user.NewService(userRepo)
+prdSvc := user.NewService(productRepo)
+
+	productHandler := prdHandler.NewHandler(middlewares, prdSvc)
 	userRepo := repo.NewUserRepo(dbcon)
-	userHandler := user.NewHandler(middlewares, userRepo, cnf)
+	userHandler := usrHandler.NewHandler(middlewares, usrSvc, cnf)
 
 	server := rest.NewServer(cnf, productHandler, userHandler)
 	server.Start(*cnf)
-
+0
 }
